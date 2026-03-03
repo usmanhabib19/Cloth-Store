@@ -1,0 +1,238 @@
+require('dotenv').config();
+const mongoose = require('mongoose');
+const connectDB = require('./config/db');
+const Product = require('./models/Product');
+
+const products = [
+    {
+        name: 'Urban Neon Bomber Jacket',
+        description: 'A sleek bomber jacket with neon accent stitching and premium satin lining. Perfect for street style.',
+        price: 4599,
+        originalPrice: 6500,
+        category: 'men',
+        subCategory: 'jackets',
+        sizes: ['S', 'M', 'L', 'XL'],
+        images: [
+            'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600',
+            'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600',
+        ],
+        stock: 25,
+        featured: true,
+        rating: 4.8,
+        numReviews: 124,
+        tags: ['jacket', 'streetwear', 'men'],
+    },
+    {
+        name: 'Crystal Glow Evening Dress',
+        description: 'Stunning midi evening dress with crystal embellishments on the neckline. Turns heads at every event.',
+        price: 7999,
+        originalPrice: 12000,
+        category: 'women',
+        subCategory: 'dresses',
+        sizes: ['XS', 'S', 'M', 'L'],
+        images: [
+            'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600',
+            'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600',
+        ],
+        stock: 15,
+        featured: true,
+        rating: 4.9,
+        numReviews: 89,
+        tags: ['dress', 'evening', 'women'],
+    },
+    {
+        name: 'Oversized Graphic Tee',
+        description: 'Premium 100% cotton oversized tee with bold neon graphic print. Comfort meets style.',
+        price: 1299,
+        originalPrice: 1800,
+        category: 'men',
+        subCategory: 't-shirts',
+        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+        images: [
+            'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600',
+            'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=600',
+        ],
+        stock: 80,
+        featured: false,
+        rating: 4.5,
+        numReviews: 213,
+        tags: ['tshirt', 'casual', 'men', 'graphic'],
+    },
+    {
+        name: 'Velvet Midnight Blazer',
+        description: 'Rich midnight blue velvet blazer for women. Sophisticated silhouette with satin lapels.',
+        price: 8500,
+        originalPrice: 11000,
+        category: 'women',
+        subCategory: 'blazers',
+        sizes: ['XS', 'S', 'M', 'L', 'XL'],
+        images: [
+            'https://images.unsplash.com/photo-1594938298603-c8148c4b4509?w=600',
+            'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=600',
+        ],
+        stock: 20,
+        featured: true,
+        rating: 4.7,
+        numReviews: 56,
+        tags: ['blazer', 'formal', 'women'],
+    },
+    {
+        name: 'Kids Dino Explorer Set',
+        description: 'Fun and colorful dino-themed matching set for kids. Soft cotton, easy wash, perfect for adventures.',
+        price: 1850,
+        originalPrice: 2400,
+        category: 'kids',
+        subCategory: 'sets',
+        sizes: ['XS', 'S', 'M'],
+        images: [
+            'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=600',
+            'https://images.unsplash.com/photo-1530820761004-c1b69e25e89f?w=600',
+        ],
+        stock: 40,
+        featured: false,
+        rating: 4.6,
+        numReviews: 78,
+        tags: ['kids', 'set', 'casual'],
+    },
+    {
+        name: 'Luxury Silk Scarf',
+        description: 'Hand-rolled edges pure silk scarf with vibrant abstract print. A timeless accessory.',
+        price: 3200,
+        originalPrice: 4500,
+        category: 'accessories',
+        subCategory: 'scarves',
+        sizes: ['Free'],
+        images: [
+            'https://images.unsplash.com/photo-1601924357840-3e50ad4dd9bf?w=600',
+            'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=600',
+        ],
+        stock: 60,
+        featured: false,
+        rating: 4.8,
+        numReviews: 34,
+        tags: ['scarf', 'silk', 'accessories'],
+    },
+    {
+        name: 'Cargo Street Joggers',
+        description: 'Multi-pocket cargo joggers in heavyweight fleece. The ultimate streetwear essential.',
+        price: 2799,
+        originalPrice: 3800,
+        category: 'men',
+        subCategory: 'pants',
+        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+        images: [
+            'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600',
+            'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=600',
+        ],
+        stock: 35,
+        featured: false,
+        rating: 4.4,
+        numReviews: 167,
+        tags: ['joggers', 'streetwear', 'men'],
+    },
+    {
+        name: 'Floral Boho Maxi Skirt',
+        description: 'Flowing chiffon maxi skirt with vibrant boho floral pattern. Free-spirited and elegant.',
+        price: 2400,
+        originalPrice: 3200,
+        category: 'women',
+        subCategory: 'skirts',
+        sizes: ['XS', 'S', 'M', 'L'],
+        images: [
+            'https://images.unsplash.com/photo-1583496661160-fb5218afa9a3?w=600',
+            'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600',
+        ],
+        stock: 28,
+        featured: true,
+        rating: 4.6,
+        numReviews: 91,
+        tags: ['skirt', 'boho', 'women'],
+    },
+    {
+        name: 'Leather Minimalist Wallet',
+        description: 'Slim bifold wallet in genuine Italian leather with RFID blocking and card slots.',
+        price: 1500,
+        originalPrice: 2000,
+        category: 'accessories',
+        subCategory: 'wallets',
+        sizes: ['Free'],
+        images: [
+            'https://images.unsplash.com/photo-1627123424574-724758594e93?w=600',
+            'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600',
+        ],
+        stock: 100,
+        featured: false,
+        rating: 4.7,
+        numReviews: 245,
+        tags: ['wallet', 'leather', 'accessories'],
+    },
+    {
+        name: 'Kids Rainbow Hoodie',
+        description: 'Super soft rainbow-striped hoodie for kids. Machine washable and vibrant colors that last.',
+        price: 1600,
+        originalPrice: 2000,
+        category: 'kids',
+        subCategory: 'tops',
+        sizes: ['XS', 'S', 'M'],
+        images: [
+            'https://images.unsplash.com/photo-1467043237213-65f2da53396f?w=600',
+            'https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?w=600',
+        ],
+        stock: 50,
+        featured: false,
+        rating: 4.5,
+        numReviews: 62,
+        tags: ['kids', 'hoodie', 'casual'],
+    },
+    {
+        name: 'Monochrome Slim Fit Suit',
+        description: 'Sharp all-black slim fit suit in premium wool blend. Tailored excellence for modern gentlemen.',
+        price: 18500,
+        originalPrice: 25000,
+        category: 'men',
+        subCategory: 'suits',
+        sizes: ['S', 'M', 'L', 'XL'],
+        images: [
+            'https://images.unsplash.com/photo-1593032465175-481ac7f401a0?w=600',
+            'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600',
+        ],
+        stock: 12,
+        featured: true,
+        rating: 4.9,
+        numReviews: 38,
+        tags: ['suit', 'formal', 'men'],
+    },
+    {
+        name: 'Neon Crossbody Bag',
+        description: 'Mini vegan leather crossbody bag with neon stitching and gold hardware. Y2K meets futurism.',
+        price: 2850,
+        originalPrice: 3800,
+        category: 'accessories',
+        subCategory: 'bags',
+        sizes: ['Free'],
+        images: [
+            'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600',
+            'https://images.unsplash.com/photo-1594938298603-c8148c4b4509?w=600',
+        ],
+        stock: 30,
+        featured: true,
+        rating: 4.7,
+        numReviews: 105,
+        tags: ['bag', 'crossbody', 'accessories', 'neon'],
+    },
+];
+
+const seedData = async () => {
+    try {
+        await connectDB();
+        await Product.deleteMany({});
+        const created = await Product.insertMany(products);
+        console.log(`✅ Seeded ${created.length} products successfully!`);
+        process.exit(0);
+    } catch (error) {
+        console.error('❌ Seed error:', error);
+        process.exit(1);
+    }
+};
+
+seedData();
