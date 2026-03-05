@@ -13,7 +13,8 @@ connectDB();
 
 const app = express();
 
-app.use(cors({ origin: '*' }));
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*';
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 app.use(morgan('dev'));
 
