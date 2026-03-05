@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { toast } from 'react-toastify';
 import { FiShoppingBag, FiHeart, FiStar, FiChevronLeft } from 'react-icons/fi';
 import api from '../api/axios';
+import ProductVideo from '../components/ProductVideo';
 
 export default function ProductDetailPage() {
     const { id } = useParams();
@@ -68,6 +69,16 @@ export default function ProductDetailPage() {
                             </div>
                         ))}
                     </div>
+
+                    {/* Product Video */}
+                    {product.video && (
+                        <div style={{ marginTop: '24px' }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '12px', color: 'var(--text-primary)' }}>
+                                Product Video
+                            </h3>
+                            <ProductVideo src={product.video} poster={product.images?.[0]} />
+                        </div>
+                    )}
                 </div>
 
                 {/* Info */}

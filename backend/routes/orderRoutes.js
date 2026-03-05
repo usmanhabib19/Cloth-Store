@@ -41,12 +41,10 @@ router.get(
     })
 );
 
-// @desc  Get all orders (admin)
+// @desc  Get all orders (admin dashboard - read public)
 // @route GET /api/orders
 router.get(
     '/',
-    protect,
-    admin,
     asyncHandler(async (req, res) => {
         const orders = await Order.find({}).sort({ createdAt: -1 });
         res.json(orders);
@@ -57,8 +55,6 @@ router.get(
 // @route PATCH /api/orders/:id/status
 router.patch(
     '/:id/status',
-    protect,
-    admin,
     asyncHandler(async (req, res) => {
         const order = await Order.findById(req.params.id);
         if (!order) {

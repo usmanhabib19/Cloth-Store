@@ -1,0 +1,67 @@
+.container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    background: #000;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.container:hover .controls {
+    opacity: 1;
+}
+
+.controlBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.controlBtn:hover {
+    background: rgba(0, 245, 255, 0.2);
+    border-color: #00f5ff;
+    color: #00f5ff;
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .controls {
+        opacity: 1;
+        bottom: 12px;
+        right: 12px;
+    }
+
+    .controlBtn {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+    }
+}

@@ -3,10 +3,12 @@ const clerk = require('@clerk/clerk-sdk-node');
 
 const protect = asyncHandler(async (req, res, next) => {
     let token;
+    console.log('Incoming Headers:', req.headers.authorization ? 'Auth Header Present' : 'No Auth Header');
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
     }
     if (!token) {
+        console.warn('⚠️ No token provided in request');
         res.status(401);
         throw new Error('Not authorized, no token');
     }
@@ -15,6 +17,7 @@ const protect = asyncHandler(async (req, res, next) => {
         req.user = payload;
         next();
     } catch (error) {
+        console.error('❌ Auth Error:', error.message);
         res.status(401);
         throw new Error('Not authorized, token failed');
     }

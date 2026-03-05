@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
-import { FiShoppingBag, FiSearch, FiMenu, FiX } from 'react-icons/fi';
+import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react';
+import { FiShoppingBag, FiSearch, FiMenu, FiX, FiShield, FiHome, FiShoppingCart } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import styles from './Navbar.module.css';
 
@@ -14,7 +14,10 @@ const LINKS = [
     { label: 'Accessories', path: '/shop?category=accessories' },
 ];
 
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+
 export default function Navbar() {
+    const { user } = useUser();
     const { cartCount } = useCart();
     const navigate = useNavigate();
     const location = useLocation();
@@ -22,6 +25,9 @@ export default function Navbar() {
     const [searchTerm, setSearchTerm] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const searchRef = useRef(null);
+
+    const isAdmin = user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL;
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 20);
@@ -29,7 +35,26 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+    useEffect(() => {
+        setMenuOpen(false);
+        setSearchOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        if (searchOpen && searchRef.current) {
+            searchRef.current.focus();
+        }
+    }, [searchOpen]);
+
+    // Close menu when clicking overlay
+    useEffect(() => {
+        if (menuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [menuOpen]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -40,103 +65,169 @@ export default function Navbar() {
         }
     };
 
+    const isActive = (path) => {
+        const base = path.split('?')[0];
+        if (path.includes('?')) return false;
+        return location.pathname === base;
+    };
+
     return (
-        <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
-            <div className={`container ${styles.inner}`}>
-                {/* Logo */}
-                <Link to="/" className={styles.logo}>
-                    <span className={styles.logoIcon}>✦</span>
-                    <span>LUMI<span className="neon-text">NARA</span></span>
-                </Link>
-
-                {/* Desktop Links */}
-                <ul className={styles.links}>
-                    {LINKS.map((l) => (
-                        <li key={l.path}>
-                            <Link
-                                to={l.path}
-                                className={`${styles.link} ${location.pathname === l.path.split('?')[0] && !l.path.includes('?') ? styles.active : ''}`}
-                            >
-                                {l.label}
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-
-                {/* Actions */}
-                <div className={styles.actions}>
-                    {/* Search */}
-                    <div className={styles.searchWrap}>
-                        {searchOpen ? (
-                            <form onSubmit={handleSearch} className={styles.searchForm}>
-                                <input
-                                    autoFocus
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Search clothes..."
-                                    className={styles.searchInput}
-                                />
-                                <button type="button" onClick={() => setSearchOpen(false)} className={styles.iconBtn}>
-                                    <FiX size={18} />
-                                </button>
-                            </form>
-                        ) : (
-                            <button className={styles.iconBtn} onClick={() => setSearchOpen(true)} title="Search">
-                                <FiSearch size={20} />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Cart */}
-                    <Link to="/cart" className={styles.cartBtn} title="Cart">
-                        <FiShoppingBag size={20} />
-                        {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
+        <>
+            <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
+                <div className={styles.pill}>
+                    {/* Logo */}
+                    <Link to="/" className={styles.logo}>
+                        <span className={styles.logoIcon}>✦</span>
+                        <span className={styles.logoText}>LUMINARA</span>
                     </Link>
 
-                    {/* Auth */}
+                    {/* Desktop Links */}
+                    <ul className={styles.links}>
+                        {LINKS.map((l) => (
+                            <li key={l.path}>
+                                <Link
+                                    to={l.path}
+                                    className={`${styles.link} ${isActive(l.path) ? styles.active : ''}`}
+                                >
+                                    {l.label}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+
+                    {/* Right actions */}
+                    <div className={styles.actions}>
+                        {/* Search */}
+                        <>
+                            {searchOpen ? (
+                                <form onSubmit={handleSearch} className={styles.searchForm}>
+                                    <input
+                                        ref={searchRef}
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        placeholder="Search clothes..."
+                                        className={styles.searchInput}
+                                    />
+                                    <button type="button" onClick={() => setSearchOpen(false)} className={styles.iconBtn}>
+                                        <FiX size={18} />
+                                    </button>
+                                </form>
+                            ) : (
+                                <button className={styles.iconBtn} onClick={() => setSearchOpen(true)}>
+                                    <FiSearch size={18} />
+                                </button>
+                            )}
+                        </>
+
+                        {/* Cart */}
+                        <Link to="/cart" className={styles.cartBtn}>
+                            <FiShoppingBag size={18} />
+                            {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
+                        </Link>
+
+                        {/* Auth - desktop only */}
+                        <div className={styles.authDesktop}>
+                            <SignedOut>
+                                <SignInButton mode="modal">
+                                    <button className={styles.signInBtn}>Sign In</button>
+                                </SignInButton>
+                            </SignedOut>
+                            <SignedIn>
+                                <UserButton afterSignOutUrl="/">
+                                    {isAdmin && (
+                                        <UserButton.MenuItems>
+                                            <UserButton.Action
+                                                label="Admin Panel"
+                                                labelIcon={<FiShield size={16} />}
+                                                onClick={() => navigate('/admin')}
+                                            />
+                                        </UserButton.MenuItems>
+                                    )}
+                                </UserButton>
+                            </SignedIn>
+                        </div>
+
+                        {/* Hamburger */}
+                        <button
+                            className={styles.hamburger}
+                            onClick={() => setMenuOpen(true)}
+                            aria-label="Open menu"
+                        >
+                            <FiMenu size={22} />
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            {/* Mobile Drawer Overlay */}
+            {menuOpen && (
+                <div className={styles.overlay} onClick={() => setMenuOpen(false)} />
+            )}
+
+            {/* Mobile Drawer */}
+            <aside className={`${styles.drawer} ${menuOpen ? styles.drawerOpen : ''}`}>
+                {/* Drawer Header */}
+                <div className={styles.drawerHeader}>
+                    <Link to="/" className={styles.logo} onClick={() => setMenuOpen(false)}>
+                        <span className={styles.logoIcon}>✦</span>
+                        <span className={styles.logoText}>LUMINARA</span>
+                    </Link>
+                    <button className={styles.closeBtn} onClick={() => setMenuOpen(false)}>
+                        <FiX size={22} />
+                    </button>
+                </div>
+
+                {/* Nav Links */}
+                <nav className={styles.drawerNav}>
+                    {LINKS.map((l) => (
+                        <Link
+                            key={l.path}
+                            to={l.path}
+                            className={`${styles.drawerLink} ${isActive(l.path) ? styles.drawerLinkActive : ''}`}
+                            onClick={() => setMenuOpen(false)}
+                        >
+                            {l.label}
+                        </Link>
+                    ))}
+                </nav>
+
+                {/* Drawer Footer */}
+                <div className={styles.drawerFooter}>
+                    <Link to="/orders" className={styles.drawerFooterLink} onClick={() => setMenuOpen(false)}>
+                        My Orders
+                    </Link>
                     <SignedOut>
                         <SignInButton mode="modal">
-                            <button className="btn-outline" style={{ padding: '8px 18px', fontSize: '0.85rem' }}>Sign In</button>
+                            <button className={styles.drawerSignIn} onClick={() => setMenuOpen(false)}>
+                                Sign In
+                            </button>
                         </SignInButton>
                     </SignedOut>
                     <SignedIn>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <Link to="/orders" className={styles.iconBtn} title="My Orders">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-                                    <rect x="9" y="3" width="6" height="4" rx="1" />
-                                    <line x1="9" y1="12" x2="15" y2="12" /><line x1="9" y1="16" x2="13" y2="16" />
-                                </svg>
-                            </Link>
-                            <UserButton afterSignOutUrl="/" />
+                        <div className={styles.drawerUser}>
+                            <UserButton afterSignOutUrl="/">
+                                {isAdmin && (
+                                    <UserButton.MenuItems>
+                                        <UserButton.Action
+                                            label="Admin Panel"
+                                            labelIcon={<FiShield size={16} />}
+                                            onClick={() => navigate('/admin')}
+                                        />
+                                    </UserButton.MenuItems>
+                                )}
+                            </UserButton>
+                            <span className={styles.drawerUserName}>
+                                {user?.firstName || 'Account'}
+                            </span>
                         </div>
+                        {isAdmin && (
+                            <Link to="/admin" className={styles.adminBtn} onClick={() => setMenuOpen(false)}>
+                                <FiShield size={14} /> Admin Panel
+                            </Link>
+                        )}
                     </SignedIn>
-
-                    {/* Hamburger */}
-                    <button className={styles.hamburger} onClick={() => setMenuOpen(!menuOpen)}>
-                        {menuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
-                    </button>
                 </div>
-            </div>
-
-            {/* Mobile Menu */}
-            {menuOpen && (
-                <div className={styles.mobileMenu}>
-                    {LINKS.map((l) => (
-                        <Link key={l.path} to={l.path} className={styles.mobileLink}>{l.label}</Link>
-                    ))}
-                    <div className={styles.mobileActions}>
-                        <SignedOut>
-                            <SignInButton mode="modal">
-                                <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Sign In</button>
-                            </SignInButton>
-                        </SignedOut>
-                        <SignedIn>
-                            <Link to="/orders" className="btn-ghost" style={{ width: '100%', justifyContent: 'center' }}>My Orders</Link>
-                        </SignedIn>
-                    </div>
-                </div>
-            )}
-        </nav>
+            </aside>
+        </>
     );
 }

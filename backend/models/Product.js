@@ -14,6 +14,7 @@ const productSchema = new mongoose.Schema(
         subCategory: { type: String, default: '' },
         sizes: [{ type: String, enum: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free'] }],
         images: [{ type: String }],
+        video: { type: String },
         stock: { type: Number, default: 0, min: 0 },
         featured: { type: Boolean, default: false },
         rating: { type: Number, default: 4.5, min: 0, max: 5 },

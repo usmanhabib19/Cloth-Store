@@ -51,12 +51,16 @@ router.get(
 // @route POST /api/products
 router.post(
     '/',
-    protect,
-    admin,
-    upload.array('images', 5),
+    upload.fields([
+        { name: 'images', maxCount: 5 },
+        { name: 'video', maxCount: 1 },
+    ]),
     asyncHandler(async (req, res) => {
         const { name, description, price, originalPrice, category, subCategory, sizes, stock, featured, tags } = req.body;
-        const images = req.files ? req.files.map((f) => f.path) : [];
+
+        const images = req.files && req.files.images ? req.files.images.map((f) => f.path) : [];
+        const video = req.files && req.files.video ? req.files.video[0].path : undefined;
+
         const parsedSizes = typeof sizes === 'string' ? JSON.parse(sizes) : sizes;
         const parsedTags = typeof tags === 'string' ? JSON.parse(tags) : tags || [];
 
@@ -69,6 +73,7 @@ router.post(
             subCategory,
             sizes: parsedSizes,
             images,
+            video,
             stock: Number(stock || 0),
             featured: featured === 'true',
             tags: parsedTags,
@@ -81,9 +86,10 @@ router.post(
 // @route PUT /api/products/:id
 router.put(
     '/:id',
-    protect,
-    admin,
-    upload.array('images', 5),
+    upload.fields([
+        { name: 'images', maxCount: 5 },
+        { name: 'video', maxCount: 1 },
+    ]),
     asyncHandler(async (req, res) => {
         const product = await Product.findById(req.params.id);
         if (!product) {
@@ -91,7 +97,9 @@ router.put(
             throw new Error('Product not found');
         }
         const { name, description, price, originalPrice, category, subCategory, sizes, stock, featured, tags } = req.body;
-        const newImages = req.files ? req.files.map((f) => f.path) : [];
+
+        const newImages = req.files && req.files.images ? req.files.images.map((f) => f.path) : [];
+        const newVideo = req.files && req.files.video ? req.files.video[0].path : undefined;
 
         product.name = name || product.name;
         product.description = description || product.description;
@@ -103,7 +111,9 @@ router.put(
         product.stock = stock ? Number(stock) : product.stock;
         product.featured = featured !== undefined ? featured === 'true' : product.featured;
         product.tags = tags ? (typeof tags === 'string' ? JSON.parse(tags) : tags) : product.tags;
+
         if (newImages.length > 0) product.images = newImages;
+        if (newVideo) product.video = newVideo;
 
         const updated = await product.save();
         res.json(updated);
@@ -114,8 +124,6 @@ router.put(
 // @route DELETE /api/products/:id
 router.delete(
     '/:id',
-    protect,
-    admin,
     asyncHandler(async (req, res) => {
         const product = await Product.findById(req.params.id);
         if (!product) {

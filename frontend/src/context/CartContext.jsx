@@ -47,7 +47,11 @@ export const CartProvider = ({ children }) => {
     const [state, dispatch] = useReducer(cartReducer, { items: [] }, () => {
         try {
             const saved = localStorage.getItem('cart');
-            return saved ? JSON.parse(saved) : { items: [] };
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return (parsed && Array.isArray(parsed.items)) ? parsed : { items: [] };
+            }
+            return { items: [] };
         } catch {
             return { items: [] };
         }
