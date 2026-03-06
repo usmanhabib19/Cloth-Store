@@ -1,0 +1,84 @@
+.page {
+    padding-top: calc(var(--nav-height) + 40px);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 40px;
+}
+
+.shippingCard {
+    padding: 32px;
+}
+
+.formGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.paymentList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.summarySidebar {
+    position: sticky;
+    top: calc(var(--nav-height) + 40px);
+    align-self: start;
+}
+
+.summaryCard {
+    padding: 30px;
+}
+
+.itemScroll {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-bottom: 20px;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 992px) {
+    .layout {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .summarySidebar {
+        position: static;
+        order: -1; /* Show summary first on mobile if desired, or keep default */
+    }
+}
+
+@media (max-width: 768px) {
+    .formGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .shippingCard, .summaryCard {
+        padding: 20px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

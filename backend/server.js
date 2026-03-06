@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -8,6 +9,7 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const dealRoutes = require('./routes/dealRoutes');
 
 connectDB();
 
@@ -23,6 +25,7 @@ app.get('/', (req, res) => res.json({ message: '🛍️ Cloth Store API is runni
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/deals', dealRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

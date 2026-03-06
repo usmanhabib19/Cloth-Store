@@ -375,7 +375,7 @@
 
 .statusSelect {
     appearance: none;
-    background: rgba(255, 255, 255, 0.05);
+    background: #0d0d1f; /* Use solid dark background for the select */
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     color: #fff;
@@ -385,6 +385,11 @@
     font-family: inherit;
     font-weight: 600;
     transition: border-color 0.2s;
+}
+
+.statusSelect option {
+    background: #0d0d1f;
+    color: #fff;
 }
 
 .statusSelect:hover {
@@ -541,6 +546,12 @@ textarea.formInput {
 select.formInput {
     appearance: none;
     cursor: pointer;
+    background: #0d0d1f; /* Use solid dark background */
+}
+
+.formInput option {
+    background: #0d0d1f;
+    color: #fff;
 }
 
 /* ─── TOGGLE ─── */

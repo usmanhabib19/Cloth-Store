@@ -31,6 +31,8 @@ const orderSchema = new mongoose.Schema(
         },
         paymentMethod: { type: String, default: 'COD' },
         isPaid: { type: Boolean, default: false },
+        trackingId: { type: String },
+        shippingImage: { type: String },
     },
     { timestamps: true }
 );

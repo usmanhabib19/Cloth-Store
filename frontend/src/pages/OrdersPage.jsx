@@ -1,32 +1,34 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { FiPackage, FiCalendar, FiMapPin, FiTruck, FiCheckCircle } from 'react-icons/fi';
 import api from '../api/axios';
 
 export default function OrdersPage() {
-    const { isLoaded, isSignedIn } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const isSignedIn = !!user;
+
     useEffect(() => {
-        if (isLoaded && isSignedIn) {
+        if (!authLoading && isSignedIn) {
             api.get('/orders/my')
                 .then(res => setOrders(res.data))
                 .catch(err => console.error(err))
                 .finally(() => setLoading(false));
-        } else if (isLoaded && !isSignedIn) {
+        } else if (!authLoading && !isSignedIn) {
             setLoading(false);
         }
-    }, [isLoaded, isSignedIn]);
+    }, [authLoading, isSignedIn]);
 
-    if (loading) return <div className="spinner-container"><div className="spinner"></div></div>;
+    if (loading || authLoading) return <div className="spinner-container"><div className="spinner"></div></div>;
 
     if (!isSignedIn) {
         return (
             <div className="container section" style={{ paddingTop: 'calc(var(--nav-height) + 60px)', textAlign: 'center' }}>
                 <h2 style={{ marginBottom: '16px' }}>Sign in to view orders</h2>
-                <Link to="/" className="btn-primary">Go to Home</Link>
+                <Link to="/login" className="btn-primary">Sign In</Link>
             </div>
         );
     }
@@ -51,8 +53,14 @@ export default function OrdersPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '24px' }}>
                                 <div>
                                     <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Order ID</p>
-                                    <p style={{ fontFamily: 'monospace', fontSize: '1rem', color: 'var(--neon-cyan)' }}>#{order._id}</p>
+                                    <p style={{ fontFamily: 'monospace', fontSize: '1rem', color: 'var(--neon-cyan)' }}>#{order._id?.slice(-7)}</p>
                                 </div>
+                                {order.trackingId && (
+                                    <div>
+                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Tracking #</p>
+                                        <p style={{ fontFamily: 'monospace', fontSize: '1rem', color: 'var(--neon-pink)', fontWeight: 700 }}>{order.trackingId}</p>
+                                    </div>
+                                )}
                                 <div>
                                     <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Date</p>
                                     <p style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -102,6 +110,17 @@ export default function OrdersPage() {
                                             <p style={{ marginTop: '4px' }}>{order.shippingAddress.phone}</p>
                                         </div>
                                     </div>
+                                    {order.shippingImage && (
+                                        <div style={{ marginTop: '20px' }}>
+                                            <p style={{ fontSize: '0.8rem', fontWeight: 700, marginBottom: '10px', color: 'var(--neon-green)' }}>📦 Parcel Photo:</p>
+                                            <img 
+                                                src={order.shippingImage} 
+                                                alt="Parcel Proof" 
+                                                style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-glass)', cursor: 'zoom-in' }} 
+                                                onClick={() => window.open(order.shippingImage, '_blank')}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

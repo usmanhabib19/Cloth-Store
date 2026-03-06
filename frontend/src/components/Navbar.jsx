@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react';
-import { FiShoppingBag, FiSearch, FiMenu, FiX, FiShield, FiHome, FiShoppingCart } from 'react-icons/fi';
+import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
+import { FiShoppingBag, FiSearch, FiMenu, FiX, FiShield } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import styles from './Navbar.module.css';
 
 const LINKS = [
@@ -14,10 +15,8 @@ const LINKS = [
     { label: 'Accessories', path: '/shop?category=accessories' },
 ];
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
-
 export default function Navbar() {
-    const { user } = useUser();
+    const { user } = useAuth();
     const { cartCount } = useCart();
     const navigate = useNavigate();
     const location = useLocation();
@@ -27,7 +26,7 @@ export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const searchRef = useRef(null);
 
-    const isAdmin = user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL;
+    const isAdmin = user && user.isAdmin;
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 20);
@@ -205,19 +204,9 @@ export default function Navbar() {
                     </SignedOut>
                     <SignedIn>
                         <div className={styles.drawerUser}>
-                            <UserButton afterSignOutUrl="/">
-                                {isAdmin && (
-                                    <UserButton.MenuItems>
-                                        <UserButton.Action
-                                            label="Admin Panel"
-                                            labelIcon={<FiShield size={16} />}
-                                            onClick={() => navigate('/admin')}
-                                        />
-                                    </UserButton.MenuItems>
-                                )}
-                            </UserButton>
+                            <UserButton afterSignOutUrl="/" />
                             <span className={styles.drawerUserName}>
-                                {user?.firstName || 'Account'}
+                                {user?.name || 'Account'}
                             </span>
                         </div>
                         {isAdmin && (

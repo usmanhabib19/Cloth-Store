@@ -20,14 +20,29 @@ const features = [
 
 export default function HomePage() {
     const [featured, setFeatured] = useState([]);
+    const [deals, setDeals] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        api.get('/products?featured=true&limit=8')
-            .then((res) => setFeatured(res.data.products || []))
-            .catch(() => setFeatured([]))
-            .finally(() => setLoading(false));
+        const loadData = async () => {
+            try {
+                const [prodRes, dealRes] = await Promise.all([
+                    api.get('/products?featured=true&limit=8'),
+                    api.get('/deals')
+                ]);
+                setFeatured(prodRes.data.products || []);
+                setDeals(dealRes.data || []);
+            } catch (err) {
+                console.error('Error loading home data:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
     }, []);
+
+    const primaryBanner = deals.find(d => d.type === 'primary_banner');
+    const featuredDeal = deals.find(d => d.type === 'featured_deal');
 
     return (
         <div>
@@ -56,22 +71,30 @@ export default function HomePage() {
                     <div style={{ maxWidth: 760 }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 999, background: 'rgba(0,245,255,0.08)', border: '1px solid rgba(0,245,255,0.2)', marginBottom: '24px' }}>
                             <FiZap size={14} color="var(--neon-cyan)" />
-                            <span style={{ fontSize: '0.8rem', color: 'var(--neon-cyan)', fontWeight: 600, letterSpacing: 1 }}>NEW COLLECTION 2026</span>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--neon-cyan)', fontWeight: 600, letterSpacing: 1 }}>{primaryBanner?.subtitle || 'NEW COLLECTION 2026'}</span>
                         </div>
                         <h1 style={{ fontSize: 'clamp(2.8rem, 8vw, 5.5rem)', fontWeight: 900, lineHeight: 1.1, marginBottom: '24px', letterSpacing: '-1px' }}>
-                            Wear The <span className="neon-text">Future</span><br />
-                            <span className="neon-text-pink">Define Yourself</span>
+                            {primaryBanner?.title ? (
+                                <>
+                                    {primaryBanner.title.split(' ').slice(0, -1).join(' ')} <span className="neon-text">{primaryBanner.title.split(' ').slice(-1)}</span>
+                                </>
+                            ) : (
+                                <>Wear The <span className="neon-text">Future</span><br />
+                                <span className="neon-text-pink">Define Yourself</span></>
+                            )}
                         </h1>
                         <p style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: 'var(--text-secondary)', maxWidth: 500, marginBottom: '40px', lineHeight: 1.7 }}>
-                            Discover premium fashion that lives at the intersection of luxury and streetwear. Neon-lit aesthetics for a bold generation.
+                            {primaryBanner?.description || 'Discover premium fashion that lives at the intersection of luxury and streetwear. Neon-lit aesthetics for a bold generation.'}
                         </p>
                         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                            <Link to="/shop" className="btn-primary" style={{ fontSize: '1rem', padding: '14px 36px' }}>
-                                Shop Now <FiArrowRight />
+                            <Link to={primaryBanner?.buttonLink || '/shop'} className="btn-primary" style={{ fontSize: '1rem', padding: '14px 36px' }}>
+                                {primaryBanner?.buttonText || 'Shop Now'} <FiArrowRight />
                             </Link>
-                            <Link to="/shop?featured=true" className="btn-outline" style={{ fontSize: '1rem', padding: '13px 36px' }}>
-                                Featured Drops
-                            </Link>
+                            {!primaryBanner && (
+                                <Link to="/shop?featured=true" className="btn-outline" style={{ fontSize: '1rem', padding: '13px 36px' }}>
+                                    Featured Drops
+                                </Link>
+                            )}
                         </div>
                         {/* Stats */}
                         <div style={{ display: 'flex', gap: '40px', marginTop: '60px', flexWrap: 'wrap' }}>
@@ -135,9 +158,9 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* ── Banner ── */}
+            {/* ── Banner / Deals ── */}
             <section style={{
-                background: 'linear-gradient(135deg, rgba(0,245,255,0.08) 0%, rgba(139,92,246,0.12) 50%, rgba(255,0,229,0.08) 100%)',
+                background: featuredDeal ? `linear-gradient(rgba(10,10,30,0.8), rgba(10,10,30,0.8)), url(${featuredDeal.image}) center/cover no-repeat` : 'linear-gradient(135deg, rgba(0,245,255,0.08) 0%, rgba(139,92,246,0.12) 50%, rgba(255,0,229,0.08) 100%)',
                 border: '1px solid var(--border-glass)',
                 margin: '0 24px 80px',
                 borderRadius: '24px',
@@ -148,13 +171,28 @@ export default function HomePage() {
             }}>
                 <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,245,255,0.06), transparent)', pointerEvents: 'none' }} />
                 <div style={{ position: 'relative', zIndex: 1, maxWidth: 600, margin: '0 auto' }}>
-                    <p style={{ color: 'var(--neon-pink)', fontWeight: 700, letterSpacing: 2, fontSize: '0.85rem', marginBottom: '12px' }}>LIMITED TIME DEAL</p>
+                    <p style={{ color: 'var(--neon-pink)', fontWeight: 700, letterSpacing: 2, fontSize: '0.85rem', marginBottom: '12px' }}>
+                        {featuredDeal?.subtitle || 'LIMITED TIME DEAL'}
+                    </p>
                     <h2 style={{ fontSize: 'clamp(1.8rem, 5vw, 3rem)', fontWeight: 900, marginBottom: '16px' }}>
-                        Get <span className="neon-text">20% OFF</span> on First Order
+                        {featuredDeal?.title ? (
+                            <>
+                                {featuredDeal.title.split(' ').slice(0, -1).join(' ')} <span className="neon-text">{featuredDeal.title.split(' ').slice(-1)}</span>
+                            </>
+                        ) : (
+                            <>Get <span className="neon-text">20% OFF</span> on First Order</>
+                        )}
                     </h2>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>Use code <strong style={{ color: 'var(--neon-cyan)' }}>LUMI2026</strong> at checkout. Limited time only.</p>
-                    <Link to="/shop" className="btn-primary" style={{ padding: '14px 40px', fontSize: '1rem' }}>
-                        Claim Offer <FiArrowRight />
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
+                        {featuredDeal?.description || (
+                            <>Use code <strong style={{ color: 'var(--neon-cyan)' }}>LUMI2026</strong> at checkout. Limited time only.</>
+                        )}
+                        {featuredDeal?.discountCode && (
+                            <> Use code <strong style={{ color: 'var(--neon-pink)' }}>{featuredDeal.discountCode}</strong> at checkout.</>
+                        )}
+                    </p>
+                    <Link to={featuredDeal?.buttonLink || '/shop'} className="btn-primary" style={{ padding: '14px 40px', fontSize: '1rem' }}>
+                        {featuredDeal?.buttonText || 'Claim Offer'} <FiArrowRight />
                     </Link>
                 </div>
             </section>

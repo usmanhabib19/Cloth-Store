@@ -1,17 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiShoppingBag, FiHeart, FiStar } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { toast } from 'react-toastify';
+import api from '../api/axios';
 
 export default function ProductCard({ product }) {
     const { addToCart } = useCart();
     const [liked, setLiked] = useState(false);
     const [imgIdx, setImgIdx] = useState(0);
 
-    const discount = product.originalPrice
+    const [globalDiscount, setGlobalDiscount] = useState(0);
+
+    useEffect(() => {
+        api.get('/deals').then(res => {
+            const activeDeals = res.data || [];
+            if (activeDeals.length > 0) {
+                const maxDiscount = Math.max(...activeDeals.map(d => d.discountPercentage || 0));
+                setGlobalDiscount(maxDiscount);
+            }
+        }).catch(err => console.error(err));
+    }, []);
+
+    const productDiscount = product.originalPrice
         ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
         : 0;
+
+    const displayDiscount = Math.max(productDiscount, globalDiscount);
+    const hasGlobalApplied = globalDiscount > productDiscount;
+
+    const displayPrice = hasGlobalApplied 
+        ? Math.round(product.price * (1 - globalDiscount / 100))
+        : product.price;
 
     const handleAddToCart = (e) => {
         e.preventDefault();
@@ -41,7 +61,11 @@ export default function ProductCard({ product }) {
                     />
                     {/* Badges */}
                     <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {discount > 0 && <span className="badge badge-sale">-{discount}%</span>}
+                        {displayDiscount > 0 && (
+                            <span className="badge badge-sale" style={{ background: hasGlobalApplied ? 'var(--neon-purple)' : undefined }}>
+                                -{displayDiscount}% {hasGlobalApplied && 'DEAL'}
+                            </span>
+                        )}
                         {product.featured && <span className="badge badge-new">Featured</span>}
                     </div>
                     {/* Like */}
@@ -93,11 +117,11 @@ export default function ProductCard({ product }) {
                     {/* Price */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--neon-cyan)' }}>
-                            PKR {product.price.toLocaleString()}
+                            PKR {displayPrice.toLocaleString()}
                         </span>
-                        {product.originalPrice && (
+                        {(product.originalPrice || hasGlobalApplied) && (
                             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                                {product.originalPrice.toLocaleString()}
+                                PKR {(hasGlobalApplied ? product.price : product.originalPrice).toLocaleString()}
                             </span>
                         )}
                     </div>

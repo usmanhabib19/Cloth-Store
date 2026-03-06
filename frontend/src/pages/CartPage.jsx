@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { FiTrash2, FiMinus, FiPlus, FiArrowRight, FiShoppingBag } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import styles from './CartPage.module.css';
 
 export default function CartPage() {
     const { cart, cartTotal, removeFromCart, updateQty } = useCart();
@@ -9,7 +10,7 @@ export default function CartPage() {
 
     if (cart.length === 0) {
         return (
-            <div className="container section" style={{ paddingTop: 'calc(var(--nav-height) + 60px)', textAlign: 'center' }}>
+            <div className={`container section ${styles.page}`} style={{ textAlign: 'center' }}>
                 <div style={{ padding: '80px 0' }}>
                     <FiShoppingBag size={80} color="var(--text-muted)" style={{ marginBottom: '24px' }} />
                     <h2 style={{ marginBottom: '16px' }}>Your cart is empty</h2>
@@ -25,24 +26,24 @@ export default function CartPage() {
     }
 
     return (
-        <div className="container section" style={{ paddingTop: 'calc(var(--nav-height) + 40px)' }}>
+        <div className={`container section ${styles.page}`}>
             <h1 className="section-title" style={{ marginBottom: '40px' }}>
                 Your <span className="neon-text">Cart</span>
             </h1>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '40px' }}>
+            <div className={styles.layout}>
                 {/* Cart Items */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     {cart.map((item) => (
-                        <div key={`${item._id}-${item.selectedSize}`} className="glass-card" style={{ padding: '20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
+                        <div key={`${item._id}-${item.selectedSize}`} className={`glass-card ${styles.cartItem}`}>
                             <img
                                 src={item.images?.[0]}
                                 alt={item.name}
-                                style={{ width: '100px', height: '130px', objectFit: 'cover', borderRadius: '8px' }}
+                                className={styles.itemImage}
                             />
-                            <div style={{ flex: 1 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{item.name}</h3>
+                            <div className={styles.itemInfo}>
+                                <div className={styles.itemHeader}>
+                                    <h3 className={styles.itemTitle}>{item.name}</h3>
                                     <button
                                         onClick={() => {
                                             removeFromCart(item._id, item.selectedSize);
@@ -56,8 +57,8 @@ export default function CartPage() {
                                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
                                     Size: <span style={{ color: 'var(--neon-cyan)', fontWeight: 600 }}>{item.selectedSize}</span>
                                 </p>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-glass)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                                    <div className={styles.qtyControls}>
                                         <button
                                             onClick={() => updateQty(item._id, item.selectedSize, Math.max(1, item.qty - 1))}
                                             style={{ padding: '6px 14px', color: 'var(--text-primary)' }}
@@ -84,8 +85,8 @@ export default function CartPage() {
                 </div>
 
                 {/* Summary side */}
-                <div style={{ position: 'sticky', top: 'calc(var(--nav-height) + 40px)', alignSelf: 'start' }}>
-                    <div className="glass-card" style={{ padding: '30px' }}>
+                <div className={styles.summarySidebar}>
+                    <div className={`glass-card ${styles.summaryCard}`}>
                         <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '24px' }}>Summary</h2>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>

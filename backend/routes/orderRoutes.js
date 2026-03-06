@@ -16,8 +16,8 @@ router.post(
             throw new Error('No order items');
         }
         const order = await Order.create({
-            userId: req.user.sub,
-            userEmail: req.user.email || '',
+            userId: req.user._id,
+            userEmail: req.user.email,
             items,
             shippingAddress,
             totalAmount,
@@ -34,17 +34,19 @@ router.get(
     '/my',
     protect,
     asyncHandler(async (req, res) => {
-        const orders = await Order.find({ userId: req.user.sub })
+        const orders = await Order.find({ userId: req.user._id })
             .populate('items.product', 'name images')
             .sort({ createdAt: -1 });
         res.json(orders);
     })
 );
 
-// @desc  Get all orders (admin dashboard - read public)
+// @desc  Get all orders (admin dashboard)
 // @route GET /api/orders
 router.get(
     '/',
+    protect,
+    admin,
     asyncHandler(async (req, res) => {
         const orders = await Order.find({}).sort({ createdAt: -1 });
         res.json(orders);
@@ -55,6 +57,8 @@ router.get(
 // @route PATCH /api/orders/:id/status
 router.patch(
     '/:id/status',
+    protect,
+    admin,
     asyncHandler(async (req, res) => {
         const order = await Order.findById(req.params.id);
         if (!order) {
@@ -62,6 +66,12 @@ router.patch(
             throw new Error('Order not found');
         }
         order.status = req.body.status || order.status;
+        if (req.body.trackingId !== undefined) {
+            order.trackingId = req.body.trackingId;
+        }
+        if (req.body.shippingImage !== undefined) {
+            order.shippingImage = req.body.shippingImage;
+        }
         const updated = await order.save();
         res.json(updated);
     })

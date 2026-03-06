@@ -1,14 +1,16 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth, SignInButton } from '@clerk/clerk-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { toast } from 'react-toastify';
 import { FiLock, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 import api from '../api/axios';
+import styles from './CheckoutPage.module.css';
 
 export default function CheckoutPage() {
     const { cart, cartTotal, clearCart } = useCart();
-    const { isSignedIn, userId } = useAuth();
+    const { user } = useAuth();
+    const isSignedIn = !!user;
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(false);
@@ -20,6 +22,24 @@ export default function CheckoutPage() {
         postalCode: '',
         country: 'Pakistan'
     });
+    const [selectedPayment, setSelectedPayment] = useState('cod');
+
+    const paymentMethods = [
+        { id: 'cod', name: 'Cash on Delivery (COD)', desc: 'Pay when you receive the package.' },
+        { id: 'bank', name: 'Bank Transfer', desc: 'Coming soon' },
+        { id: 'jazzcash', name: 'Jazzcash', desc: 'Coming soon' },
+        { id: 'easypaisa', name: 'Easypaisa', desc: 'Coming soon' },
+        { id: 'nayapay', name: 'Nayapay', desc: 'Coming soon' },
+        { id: 'sadapay', name: 'Sadapay', desc: 'Coming soon' }
+    ];
+
+    const handlePaymentSelect = (id) => {
+        if (id !== 'cod') {
+            toast.info(`${paymentMethods.find(m => m.id === id).name} integration is coming soon!`);
+            return;
+        }
+        setSelectedPayment(id);
+    };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -67,8 +87,8 @@ export default function CheckoutPage() {
     }
 
     return (
-        <div className="container section" style={{ paddingTop: 'calc(var(--nav-height) + 40px)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+        <div className={`container section ${styles.page}`}>
+            <div className={styles.header}>
                 <button onClick={() => navigate('/cart')} className="btn-ghost" style={{ padding: '8px' }}>
                     <FiArrowLeft size={18} />
                 </button>
@@ -84,18 +104,16 @@ export default function CheckoutPage() {
                     <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
                         Please sign in to your account to securely complete your order and track your shipping.
                     </p>
-                    <SignInButton mode="modal">
-                        <button className="btn-primary" style={{ padding: '14px 40px' }}>Sign In to Proceed</button>
-                    </SignInButton>
+                    <Link to="/login?redirect=/checkout" className="btn-primary" style={{ padding: '14px 40px' }}>Sign In to Proceed</Link>
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '40px' }}>
+                <div className={styles.layout}>
                     {/* Shipping Form */}
                     <form onSubmit={handleSubmit}>
-                        <div className="glass-card" style={{ padding: '32px' }}>
+                        <div className={`glass-card ${styles.shippingCard}`}>
                             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '24px' }}>Shipping Information</h2>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                            <div className={styles.formGrid}>
                                 <div className="form-group">
                                     <label>Full Name</label>
                                     <input
@@ -123,7 +141,7 @@ export default function CheckoutPage() {
                                 />
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+                            <div className={styles.formGrid} style={{ marginBottom: '32px' }}>
                                 <div className="form-group">
                                     <label>City</label>
                                     <input
@@ -143,12 +161,36 @@ export default function CheckoutPage() {
                             </div>
 
                             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '24px' }}>Payment Method</h2>
-                            <div className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', border: '1.5px solid var(--neon-cyan)' }}>
-                                <FiCheckCircle size={24} color="var(--neon-cyan)" />
-                                <div>
-                                    <p style={{ fontWeight: 700 }}>Cash on Delivery (COD)</p>
-                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Pay when you receive the package.</p>
-                                </div>
+                            <div className={styles.paymentList}>
+                                {paymentMethods.map((method) => (
+                                    <div
+                                        key={method.id}
+                                        onClick={() => handlePaymentSelect(method.id)}
+                                        className="glass-card"
+                                        style={{
+                                            padding: '20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '16px',
+                                            cursor: 'pointer',
+                                            border: selectedPayment === method.id ? '2px solid var(--neon-cyan)' : '1px solid var(--border-glass)',
+                                            transition: 'all 0.3s ease',
+                                            opacity: method.id !== 'cod' ? 0.7 : 1
+                                        }}
+                                    >
+                                        <div style={{
+                                            width: '24px', height: '24px', borderRadius: '50%',
+                                            border: `2px solid ${selectedPayment === method.id ? 'var(--neon-cyan)' : 'var(--text-muted)'}`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                        }}>
+                                            {selectedPayment === method.id && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--neon-cyan)' }} />}
+                                        </div>
+                                        <div>
+                                            <p style={{ fontWeight: 700, color: selectedPayment === method.id ? 'var(--neon-cyan)' : 'var(--text-primary)' }}>{method.name}</p>
+                                            <p style={{ color: method.id !== 'cod' ? 'var(--neon-pink)' : 'var(--text-secondary)', fontSize: '0.85rem' }}>{method.desc}</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
@@ -162,10 +204,10 @@ export default function CheckoutPage() {
                     </form>
 
                     {/* Order Summary */}
-                    <div style={{ position: 'sticky', top: 'calc(var(--nav-height) + 40px)', alignSelf: 'start' }}>
-                        <div className="glass-card" style={{ padding: '30px' }}>
+                    <div className={styles.summarySidebar}>
+                        <div className={`glass-card ${styles.summaryCard}`}>
                             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '20px' }}>Order Summary</h2>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '300px', overflowY: 'auto', paddingRight: '10px', marginBottom: '20px' }}>
+                            <div className={styles.itemScroll}>
                                 {cart.map((item) => (
                                     <div key={`${item._id}-${item.selectedSize}`} style={{ display: 'flex', gap: '12px' }}>
                                         <img src={item.images?.[0]} style={{ width: '50px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} alt="" />

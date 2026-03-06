@@ -1,42 +1,76 @@
+const { createClerkClient } = require('@clerk/clerk-sdk-node');
 const asyncHandler = require('express-async-handler');
-const clerk = require('@clerk/clerk-sdk-node');
+const User = require('../models/User');
+
+const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 const protect = asyncHandler(async (req, res, next) => {
-    let token;
-    console.log('Incoming Headers:', req.headers.authorization ? 'Auth Header Present' : 'No Auth Header');
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        token = req.headers.authorization.split(' ')[1];
-    }
-    if (!token) {
-        console.warn('⚠️ No token provided in request');
-        res.status(401);
-        throw new Error('Not authorized, no token');
-    }
     try {
-        const payload = await clerk.verifyToken(token);
-        req.user = payload;
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            res.status(401);
+            throw new Error('Not authorized, no token provided');
+        }
+
+        const token = authHeader.split(' ')[1];
+        
+        // Verify Clerk token
+        let decoded;
+        try {
+            decoded = await clerkClient.verifyToken(token);
+        } catch (verifyErr) {
+            res.status(401);
+            throw new Error('Not authorized, token verification failed');
+        }
+
+        const clerkId = decoded.sub;
+
+        // Get user details from Clerk to sync with our DB
+        let clerkUser;
+        try {
+            clerkUser = await clerkClient.users.getUser(clerkId);
+        } catch (userErr) {
+            res.status(401);
+            throw new Error('Not authorized, user lookup failed');
+        }
+
+        const email = clerkUser.emailAddresses[0]?.emailAddress;
+        const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User';
+
+        // Find or update our local User model
+        let user = await User.findOne({ 
+            $or: [{ clerkId: clerkId }, { email: email }] 
+        });
+
+        if (!user) {
+            user = await User.create({
+                clerkId: clerkId,
+                name: name,
+                email: email,
+                isAdmin: email === process.env.ADMIN_EMAIL,
+            });
+            console.log('✅ New user synced:', email);
+        } else if (!user.clerkId || user.clerkId !== clerkId) {
+            user.clerkId = clerkId;
+            await user.save();
+        }
+
+        req.user = user;
         next();
     } catch (error) {
-        console.error('❌ Auth Error:', error.message);
         res.status(401);
-        throw new Error('Not authorized, token failed');
+        throw new Error(error.message || 'Not authorized, session failed');
     }
 });
 
-const admin = asyncHandler(async (req, res, next) => {
-    if (!req.user) {
-        res.status(401);
-        throw new Error('Not authorized');
-    }
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const clerkUser = await clerk.users.getUser(req.user.sub);
-    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
-    if (userEmail === adminEmail) {
+const admin = (req, res, next) => {
+    if (req.user && req.user.isAdmin) {
         next();
     } else {
-        res.status(403);
+        res.status(401);
         throw new Error('Not authorized as admin');
     }
-});
+};
 
 module.exports = { protect, admin };

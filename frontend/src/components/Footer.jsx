@@ -55,12 +55,18 @@ export default function Footer() {
                     <div>
                         <h4 style={{ fontWeight: 700, marginBottom: '16px' }}>Help</h4>
                         <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {['Track Order', 'Returns & Exchanges', 'Size Guide', 'Contact Us', 'FAQs'].map((item) => (
-                                <li key={item}>
-                                    <a href="#" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', transition: 'color 0.2s' }}
+                            {[
+                                { name: 'Track Order', path: '/track-order' },
+                                { name: 'Returns & Exchanges', path: '/returns-exchanges' },
+                                { name: 'Size Guide', path: '/size-guide' },
+                                { name: 'Contact Us', path: '/contact-us' },
+                                { name: 'FAQs', path: '/faqs' }
+                            ].map((item) => (
+                                <li key={item.name}>
+                                    <Link to={item.path} style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', transition: 'color 0.2s' }}
                                         onMouseEnter={(e) => (e.target.style.color = 'var(--neon-cyan)')}
                                         onMouseLeave={(e) => (e.target.style.color = 'var(--text-secondary)')}
-                                    >{item}</a>
+                                    >{item.name}</Link>
                                 </li>
                             ))}
                         </ul>
@@ -104,6 +110,9 @@ export default function Footer() {
                                 onMouseLeave={(e) => (e.target.style.color = 'var(--text-muted)')}
                             >{t}</a>
                         ))}
+                    </div>
+                    <div>
+                        <p><a href="https://codevpk.netlify.app" target="_blank" rel="noopener noreferrer">codevpk</a></p>
                     </div>
                 </div>
             </div>
