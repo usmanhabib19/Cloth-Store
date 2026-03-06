@@ -4,7 +4,8 @@ import { toast } from 'react-toastify';
 import {
     FiPlus, FiEdit2, FiTrash2, FiShoppingBag, FiLayers,
     FiX, FiCheck, FiPackage, FiTrendingUp, FiDollarSign,
-    FiUploadCloud, FiImage, FiChevronDown, FiVideo, FiTag, FiPercent, FiCopy
+    FiUploadCloud, FiImage, FiChevronDown, FiVideo, FiTag, FiPercent, FiCopy,
+    FiMail, FiTrash, FiBell
 } from 'react-icons/fi';
 import api from '../api/axios';
 import styles from './AdminPage.module.css';
@@ -38,6 +39,7 @@ export default function AdminPage() {
     const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
     const [deals, setDeals] = useState([]);
+    const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('products');
@@ -89,6 +91,14 @@ export default function AdminPage() {
             } catch (err) {
                 console.error('Deals fetch error:', err);
                 toast.error(`Deals: ${err.response?.data?.message || err.message}`);
+            }
+
+            // Fetch Messages
+            try {
+                const msgRes = await api.get('/messages');
+                setMessages(msgRes.data || []);
+            } catch (err) {
+                console.error('Messages fetch error:', err);
             }
         } catch (err) {
             console.error('General fetch error:', err);
@@ -299,6 +309,26 @@ export default function AdminPage() {
         }
     };
 
+    const markMessageAsRead = async (id) => {
+        try {
+            await api.patch(`/messages/${id}/read`);
+            fetchData();
+        } catch (err) {
+            toast.error('Failed to update message');
+        }
+    };
+
+    const deleteMessage = async (id) => {
+        if (!window.confirm('Delete this message?')) return;
+        try {
+            await api.delete(`/messages/${id}`);
+            toast.success('Message deleted');
+            fetchData();
+        } catch (err) {
+            toast.error('Delete failed');
+        }
+    };
+
     const updateOrderStatus = async (id, status, trackingId, shippingImage) => {
         try {
             await api.patch(`/orders/${id}/status`, { status, trackingId, shippingImage });
@@ -418,6 +448,15 @@ export default function AdminPage() {
                     onClick={() => setActiveTab('deals')}
                 >
                     <FiTag size={16} /> Deals & Ads
+                </button>
+                <button
+                    className={`${styles.tab} ${activeTab === 'messages' ? styles.tabActive : ''}`}
+                    onClick={() => setActiveTab('messages')}
+                >
+                    <FiMail size={16} /> Messages
+                    {messages.filter(m => !m.isRead).length > 0 && (
+                        <span className={styles.tabBadge}>{messages.filter(m => !m.isRead).length}</span>
+                    )}
                 </button>
             </div>
 
@@ -633,6 +672,71 @@ export default function AdminPage() {
                                                         <FiEdit2 size={14} />
                                                     </button>
                                                     <button className={styles.deleteBtn} onClick={() => handleDeleteDeal(d._id)}>
+                                                        <FiTrash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── Messages Tab ── */}
+            {activeTab === 'messages' && (
+                <div className={styles.tableCard}>
+                    {loading ? (
+                        <div className={styles.tableLoading}><div className={styles.spinner} /></div>
+                    ) : messages.length === 0 ? (
+                        <div className={styles.emptyState}>
+                            <FiMail size={48} className={styles.emptyIcon} />
+                            <p>No messages yet. Customer inquiries will appear here.</p>
+                        </div>
+                    ) : (
+                        <div className={styles.tableWrap}>
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Sender</th>
+                                        <th>Subject</th>
+                                        <th>Message</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {messages.map(m => (
+                                        <tr key={m._id} className={styles.tableRow} style={{ opacity: m.isRead ? 0.7 : 1 }}>
+                                            <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                                {new Date(m.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td>
+                                                <div style={{ fontWeight: 700 }}>{m.name}</div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.email}</div>
+                                            </td>
+                                            <td style={{ fontWeight: 600, color: 'var(--neon-cyan)' }}>{m.subject}</td>
+                                            <td style={{ maxWidth: '300px' }}>
+                                                <p style={{ fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>{m.message}</p>
+                                            </td>
+                                            <td>
+                                                {!m.isRead ? (
+                                                    <span className={styles.stockBadge} style={{ background: 'rgba(0,245,255,0.1)', color: 'var(--neon-cyan)' }}>New</span>
+                                                ) : (
+                                                    <span className={styles.stockBadge} style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' }}>Read</span>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <div className={styles.actionBtns}>
+                                                    {!m.isRead && (
+                                                        <button className={styles.editBtn} onClick={() => markMessageAsRead(m._id)} title="Mark as Read">
+                                                            <FiCheck size={14} />
+                                                        </button>
+                                                    )}
+                                                    <button className={styles.deleteBtn} onClick={() => deleteMessage(m._id)} title="Delete">
                                                         <FiTrash2 size={14} />
                                                     </button>
                                                 </div>

@@ -9,6 +9,7 @@ import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
 import AdminPage from './pages/AdminPage';
+import DealsPage from './pages/DealsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import { 
@@ -66,6 +67,8 @@ function App() {
               <AdminPage />
             </ProtectedRoute>
           } />
+          
+          <Route path="/deals" element={<DealsPage />} />
 
           {/* Support Routes */}
           <Route path="/track-order" element={<TrackOrderPage />} />

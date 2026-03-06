@@ -14,7 +14,7 @@ export default function Footer() {
                     {/* Brand */}
                     <div>
                         <div style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '12px' }}>
-                            ✦ LUMI<span className="neon-text">NARA</span>
+                            ✦ SUBHAN<span className="neon-text">.TAIR</span>
                         </div>
                         <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '0.9rem', maxWidth: 240 }}>
                             Elevating your wardrobe with premium fashion. Neon meets luxury.
@@ -112,7 +112,7 @@ export default function Footer() {
                         ))}
                     </div>
                     <div>
-                        <p><a href="https://codevpk.netlify.app" target="_blank" rel="noopener noreferrer">codevpk</a></p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Developed by <a href="https://codevpk.netlify.app" target="_blank" rel="noopener noreferrer">codevpk</a></p>
                     </div>
                 </div>
             </div>

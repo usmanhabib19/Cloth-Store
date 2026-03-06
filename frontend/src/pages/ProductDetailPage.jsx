@@ -17,6 +17,9 @@ export default function ProductDetailPage() {
     const [size, setSize] = useState('');
     const [qty, setQty] = useState(1);
     const [liked, setLiked] = useState(false);
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewComment, setReviewComment] = useState('');
+    const [submittingReview, setSubmittingReview] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -37,9 +40,27 @@ export default function ProductDetailPage() {
     if (!product) return null;
 
     const handleAdd = () => {
-        if (product.sizes?.length && !size) return toast.error('Please select a size');
         addToCart({ ...product, selectedSize: size || 'Free', qty });
         toast.success(`Added ${qty} ${product.name} to cart!`);
+    };
+
+    const handleReviewSubmit = async (e) => {
+        e.preventDefault();
+        if (!reviewComment.trim()) return toast.error('Please enter a comment');
+        setSubmittingReview(true);
+        try {
+            await api.post(`/products/${id}/reviews`, { rating: reviewRating, comment: reviewComment });
+            toast.success('Review submitted!');
+            setReviewComment('');
+            setReviewRating(5);
+            // Refresh product data
+            const res = await api.get(`/products/${id}`);
+            setProduct(res.data);
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to submit review');
+        } finally {
+            setSubmittingReview(false);
+        }
     };
 
     return (
@@ -166,6 +187,86 @@ export default function ProductDetailPage() {
                         </p>
                     </div>
 
+                </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div style={{ marginTop: '80px' }}>
+                <div className="divider" />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '60px', marginTop: '40px' }}>
+                    {/* List */}
+                    <div>
+                        <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '30px' }}>
+                            Customer <span className="neon-text">Reviews</span>
+                        </h2>
+                        {product.reviews?.length === 0 ? (
+                            <p style={{ color: 'var(--text-muted)' }}>No reviews yet. Be the first to review this product!</p>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                {product.reviews.map((rev) => (
+                                    <div key={rev._id} className="glass-card" style={{ padding: '24px', border: '1px solid var(--border-glass)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                            <span style={{ fontWeight: 700, color: 'var(--neon-cyan)' }}>{rev.name}</span>
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                                {new Date(rev.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
+                                            {[...Array(5)].map((_, i) => (
+                                                <FiStar key={i} size={14} fill={i < rev.rating ? '#f59e0b' : 'none'} color={i < rev.rating ? '#f59e0b' : 'var(--border-glass)'} />
+                                            ))}
+                                        </div>
+                                        <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{rev.comment}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Form */}
+                    <div className="glass-card" style={{ padding: '40px' }}>
+                        <h3 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '24px' }}>Write a Review</h3>
+                        <form onSubmit={handleReviewSubmit}>
+                            <div style={{ marginBottom: '24px' }}>
+                                <label style={{ display: 'block', marginBottom: '12px', fontWeight: 600 }}>Rating</label>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setReviewRating(star)}
+                                            style={{
+                                                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                                                color: star <= reviewRating ? '#f59e0b' : 'var(--border-glass)',
+                                                transition: 'transform 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                                            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                        >
+                                            <FiStar size={24} fill={star <= reviewRating ? '#f59e0b' : 'none'} />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div style={{ marginBottom: '24px' }}>
+                                <label style={{ display: 'block', marginBottom: '12px', fontWeight: 600 }}>Your Comment</label>
+                                <textarea
+                                    className="form-input"
+                                    rows="4"
+                                    placeholder="Tell us what you think..."
+                                    value={reviewComment}
+                                    onChange={(e) => setReviewComment(e.target.value)}
+                                    style={{ width: '100%', resize: 'none' }}
+                                    required
+                                />
+                            </div>
+
+                            <button type="submit" className="btn-primary" disabled={submittingReview} style={{ width: '100%', justifyContent: 'center' }}>
+                                {submittingReview ? <div className="spinner" style={{ width: 16, height: 16 }} /> : 'Submit Review'}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

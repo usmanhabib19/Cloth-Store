@@ -178,45 +178,6 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* ── Banner / Deals ── */}
-            <section style={{
-                background: featuredDeal ? `linear-gradient(rgba(10,10,30,0.8), rgba(10,10,30,0.8)), url(${featuredDeal.image}) center/cover no-repeat` : 'linear-gradient(135deg, rgba(0,245,255,0.08) 0%, rgba(139,92,246,0.12) 50%, rgba(255,0,229,0.08) 100%)',
-                border: '1px solid var(--border-glass)',
-                margin: '0 24px 80px',
-                borderRadius: '24px',
-                padding: 'clamp(40px, 6vw, 80px)',
-                textAlign: 'center',
-                position: 'relative',
-                overflow: 'hidden',
-            }}>
-                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,245,255,0.06), transparent)', pointerEvents: 'none' }} />
-                <div style={{ position: 'relative', zIndex: 1, maxWidth: 600, margin: '0 auto' }}>
-                    <p style={{ color: 'var(--neon-pink)', fontWeight: 700, letterSpacing: 2, fontSize: '0.85rem', marginBottom: '12px' }}>
-                        {featuredDeal?.subtitle || 'LIMITED TIME DEAL'}
-                    </p>
-                    <h2 style={{ fontSize: 'clamp(1.8rem, 5vw, 3rem)', fontWeight: 900, marginBottom: '16px' }}>
-                        {featuredDeal?.title ? (
-                            <>
-                                {featuredDeal.title.split(' ').slice(0, -1).join(' ')} <span className="neon-text">{featuredDeal.title.split(' ').slice(-1)}</span>
-                            </>
-                        ) : (
-                            <>Get <span className="neon-text">20% OFF</span> on First Order</>
-                        )}
-                    </h2>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-                        {featuredDeal?.description || (
-                            <>Use code <strong style={{ color: 'var(--neon-cyan)' }}>LUMI2026</strong> at checkout. Limited time only.</>
-                        )}
-                        {featuredDeal?.discountCode && (
-                            <> Use code <strong style={{ color: 'var(--neon-pink)' }}>{featuredDeal.discountCode}</strong> at checkout.</>
-                        )}
-                    </p>
-                    <Link to={featuredDeal?.buttonLink || '/shop'} className="btn-primary" style={{ padding: '14px 40px', fontSize: '1rem' }}>
-                        {featuredDeal?.buttonText || 'Claim Offer'} <FiArrowRight />
-                    </Link>
-                </div>
-            </section>
-
             {/* ── Features ── */}
             <section className="section" style={{ paddingTop: 0 }}>
                 <div className="container">
@@ -265,6 +226,45 @@ export default function HomePage() {
                     </div>
                 </div>
             </section>
+
+            {/* Floating Sale Icon */}
+            <Link 
+                to="/deals" 
+                style={{
+                    position: 'fixed',
+                    bottom: '30px',
+                    left: '30px',
+                    width: '70px',
+                    height: '70px',
+                    background: 'var(--neon-pink)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    textDecoration: 'none',
+                    boxShadow: '0 0 20px var(--neon-pink)',
+                    zIndex: 9999,
+                    animation: 'pulse 2s infinite',
+                    fontWeight: 900,
+                    fontSize: '0.8rem',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    transition: 'var(--transition)'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+                <FiZap size={20} style={{ marginBottom: '-2px' }} />
+                <span>SALE</span>
+                <style>{`
+                    @keyframes pulse {
+                        0% { transform: scale(1); box-shadow: 0 0 10px var(--neon-pink); }
+                        50% { transform: scale(1.05); box-shadow: 0 0 25px var(--neon-pink); }
+                        100% { transform: scale(1); box-shadow: 0 0 10px var(--neon-pink); }
+                    }
+                `}</style>
+            </Link>
         </div>
     );
 }

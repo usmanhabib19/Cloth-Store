@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { FiPackage, FiRefreshCw, FiInfo, FiMail, FiMapPin, FiPhone, FiCheckCircle, FiHelpCircle } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
+import api from '../api/axios';
+import { toast } from 'react-toastify';
 
 const PageHeader = ({ title, icon: Icon }) => (
     <div style={{
@@ -109,7 +111,31 @@ export const SizeGuidePage = () => (
 
 // --- Contact Us ---
 export const ContactPage = () => {
+    const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        const formData = new FormData(e.target);
+        const data = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            message: formData.get('message'),
+            subject: 'Contact Form Inquiry'
+        };
+
+        try {
+            await api.post('/messages', data);
+            setSubmitted(true);
+            toast.success('Message sent successfully!');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to send message');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div style={{ minHeight: '80vh', paddingBottom: '80px' }}>
             <PageHeader title="Contact Us" icon={FiMail} />
@@ -125,28 +151,30 @@ export const ContactPage = () => {
                                 <button onClick={() => setSubmitted(false)} className="btn-primary" style={{ marginTop: '20px' }}>Send another</button>
                             </div>
                         ) : (
-                            <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 <div className="form-group">
                                     <label>Full Name</label>
-                                    <input type="text" className="form-input" placeholder="Enter your name" required />
+                                    <input type="text" name="name" className="form-input" placeholder="Enter your name" required />
                                 </div>
                                 <div className="form-group">
                                     <label>Email Address</label>
-                                    <input type="email" className="form-input" placeholder="name@example.com" required />
+                                    <input type="email" name="email" className="form-input" placeholder="name@example.com" required />
                                 </div>
                                 <div className="form-group">
                                     <label>Message</label>
-                                    <textarea className="form-input" style={{ minHeight: '120px' }} placeholder="How can we help?" required></textarea>
+                                    <textarea name="message" className="form-input" style={{ minHeight: '120px' }} placeholder="How can we help?" required></textarea>
                                 </div>
-                                <button type="submit" className="btn-primary">Send Message</button>
+                                <button type="submit" className="btn-primary" disabled={loading}>
+                                    {loading ? 'Sending...' : 'Send Message'}
+                                </button>
                             </form>
                         )}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {[
                             { icon: FiMapPin, title: 'Visit Us', text: '123 Neon Circuit, Tech City, 54000' },
-                            { icon: FiMail, title: 'Email Support', text: 'support@luminara.com' },
-                            { icon: FiPhone, title: 'Call Center', text: '+1 (555) 123-4567' }
+                            { icon: FiMail, title: 'Email Support', text: 'support@subhantair.com' },
+                            { icon: FiPhone, title: 'Call Center', text: '+92 312 3456789' }
                         ].map((item, i) => (
                             <div key={i} className="card" style={{ padding: '30px', display: 'flex', gap: '20px', alignItems: 'center' }}>
                                 <div style={{ color: 'var(--neon-purple)' }}>
@@ -181,7 +209,7 @@ const FAQItem = ({ question, answer }) => {
                 }}
             >
                 {question}
-                <span style={{ transform: isOpen ? 'rotate(45deg)' : 'rotate(0)' , transition: 'var(--transition)'}}>+</span>
+                <span style={{ transform: isOpen ? 'rotate(45deg)' : 'rotate(0)', transition: 'var(--transition)' }}>+</span>
             </button>
             {isOpen && (
                 <p style={{ marginTop: '15px', color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '0.95rem' }}>
