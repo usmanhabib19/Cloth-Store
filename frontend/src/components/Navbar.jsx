@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
-import { FiShoppingBag, FiSearch, FiMenu, FiX, FiShield } from 'react-icons/fi';
+import { FiShoppingBag, FiSearch, FiMenu, FiX, FiShield, FiPackage } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import styles from './Navbar.module.css';
@@ -117,6 +117,13 @@ export default function Navbar() {
                                 </button>
                             )}
                         </>
+
+                        {/* My Orders */}
+                        <SignedIn>
+                            <Link to="/orders" className={styles.iconBtn} title="My Orders">
+                                <FiPackage size={18} />
+                            </Link>
+                        </SignedIn>
 
                         {/* Cart */}
                         <Link to="/cart" className={styles.cartBtn}>
