@@ -30,7 +30,16 @@ export default function HomePage() {
                     api.get('/products?featured=true&limit=8'),
                     api.get('/deals')
                 ]);
-                setFeatured(prodRes.data.products || []);
+                
+                let featuredProducts = prodRes.data.products || [];
+                
+                // Fallback: if no featured products, get latest 8
+                if (featuredProducts.length === 0) {
+                    const fallbackRes = await api.get('/products?limit=8');
+                    featuredProducts = fallbackRes.data.products || [];
+                }
+                
+                setFeatured(featuredProducts);
                 setDeals(dealRes.data || []);
             } catch (err) {
                 console.error('Error loading home data:', err);
@@ -143,10 +152,21 @@ export default function HomePage() {
                 <div className="container">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
                         <div>
-                            <h2 className="section-title">Featured <span className="neon-text">Drops</span></h2>
-                            <p className="section-subtitle">Our hottest picks of the season, handcurated for you.</p>
+                            <h2 className="section-title">
+                                {featured.length > 0 ? (
+                                    <>Featured <span className="neon-text">Drops</span></>
+                                ) : (
+                                    <>Latest <span className="neon-text">Arrivals</span></>
+                                )}
+                            </h2>
+                            <p className="section-subtitle">
+                                {featured.length > 0 
+                                    ? "Our hottest picks of the season, handcurated for you."
+                                    : "Check out the newest additions to our collection."
+                                }
+                            </p>
                         </div>
-                        <Link to="/shop?featured=true" className="btn-ghost">View All <FiArrowRight /></Link>
+                        <Link to="/shop" className="btn-ghost">View All <FiArrowRight /></Link>
                     </div>
                     {loading ? (
                         <div className="spinner-container"><div className="spinner"></div></div>

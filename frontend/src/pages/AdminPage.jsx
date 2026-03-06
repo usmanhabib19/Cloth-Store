@@ -23,7 +23,8 @@ const STATUS_COLORS = {
 
 const EMPTY_FORM = {
     name: '', description: '', price: '', originalPrice: '',
-    category: 'men', sizes: ['M', 'L'], stock: 10, featured: false, images: [], video: null
+    category: 'men', sizes: ['M', 'L'], stock: 10, featured: false, images: [], video: null,
+    discountPercentage: ''
 };
 
 const DEAL_EMPTY_FORM = {
@@ -122,7 +123,32 @@ export default function AdminPage() {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+        const newVal = type === 'checkbox' ? checked : value;
+
+        setFormData(prev => {
+            const updated = { ...prev, [name]: newVal };
+
+            // Logic to sync Discount % and Price
+            if (name === 'originalPrice' || name === 'price') {
+                const op = parseFloat(name === 'originalPrice' ? newVal : prev.originalPrice);
+                const p = parseFloat(name === 'price' ? newVal : prev.price);
+                if (op > 0 && p > 0) {
+                    updated.discountPercentage = Math.round(((op - p) / op) * 100);
+                } else {
+                    updated.discountPercentage = '';
+                }
+            }
+
+            if (name === 'discountPercentage') {
+                const op = parseFloat(prev.originalPrice);
+                const d = parseFloat(newVal);
+                if (op > 0 && !isNaN(d)) {
+                    updated.price = Math.round(op * (1 - d / 100));
+                }
+            }
+
+            return updated;
+        });
     };
 
     const handleFileChange = (e) => {
@@ -726,10 +752,14 @@ export default function AdminPage() {
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label>Original Price (PKR)</label>
-                                    <input className={styles.formInput} type="number" name="originalPrice" value={formData.originalPrice} onChange={handleChange} placeholder="e.g. 5000 (optional)" />
-                                    {formData.price && formData.originalPrice && Number(formData.originalPrice) > Number(formData.price) && (
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--neon-pink)', marginTop: '4px', fontWeight: 600 }}>
-                                            Calculated Discount: -{Math.round(((Number(formData.originalPrice) - Number(formData.price)) / Number(formData.originalPrice)) * 100)}%
+                                    <input className={styles.formInput} type="number" name="originalPrice" value={formData.originalPrice} onChange={handleChange} placeholder="e.g. 5000" />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Discount Percentage (%)</label>
+                                    <input className={styles.formInput} type="number" name="discountPercentage" value={formData.discountPercentage} onChange={handleChange} placeholder="e.g. 20" />
+                                    {formData.discountPercentage > 0 && (
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--neon-cyan)', marginTop: '4px', fontWeight: 600 }}>
+                                            Price after discount: PKR {formData.price}
                                         </div>
                                     )}
                                 </div>
